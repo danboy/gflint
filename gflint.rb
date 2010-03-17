@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'broach'
-require 'yaml'
 
 @last_message = 'gflint'
 
