@@ -1,0 +1,6 @@
+account_name:
+  :token: token goes here
+  :ssl: true
+  :rooms:
+    RoomName:
+      :sticky: name | Name
