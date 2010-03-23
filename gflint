@@ -6,5 +6,4 @@ require 'pathname'
 
 gflint = File.join(File.dirname(Pathname.new($0).realpath), "gflint.rb")
 
-# ... run it
 Daemons.run(gflint)

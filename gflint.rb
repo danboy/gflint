@@ -3,7 +3,7 @@ require 'rubygems'
 require "uri"
 require 'twitter/json_stream'
 require 'json'
-require "httparty"
+require "broach"
 
 @last_message = 'gflint'
 
@@ -11,15 +11,19 @@ def notify(header,msg,options = {})
   `notify-send #{options[:img]} #{options[:delay]} '#{header}' '#{msg}'`
 end
 
-def monitor_room(options,room_name,room_uri)
+def monitor_room(options,room_name,account_name, config)
 
   EventMachine::run do
     stream = Twitter::JSONStream.connect(options)
-    #users =  Connection.get(room_uri)
-    #puts users.inspect
+    account = config[account_name]
+    #Broach.settings = { 'account' => account_name, 'token' => account[:token], 'ssl'=> account[:ssl] }
+    #puts room_info
     stream.each_item do |item|
       msg = JSON.parse(item)
+      user = msg["user_id"] unless msg["user_id"].nil?
       notify( "#{room_name}:", msg["body"].to_s ) unless msg["body"].nil?
+      #puts Broach::User.find(msg["user_id"])
+      puts msg.inspect 
     end
     
     stream.on_error do |message|
@@ -40,7 +44,7 @@ config.keys.each do |account_name|
   rooms = config[account_name][:rooms]
   if rooms && rooms.size > 0
     rooms.keys.each do |room_name|
-      room_uri =  "http://#{account_name}.campfirenow.com/room/#{rooms[room_name][:id]}.json"
+      
       options = {
         :path => "/room/#{rooms[room_name][:id]}/live.json",
         :host => 'streaming.campfirenow.com',
@@ -48,7 +52,7 @@ config.keys.each do |account_name|
       }
       
       #puts room.inspect
-      monitor_room(options,room_name,room_uri)
+      monitor_room(options,room_name,account_name,config)
     end
   end
 end
