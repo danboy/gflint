@@ -12,17 +12,15 @@ def notify(header,msg,options = {})
 end
 
 def monitor_room(options,room_name,account_name, config)
+  Broach.settings = { 'account' => account_name, 'token' => config[account_name][:token],'use_ssl'=>config[account_name][:ssl]}
 
   EventMachine::run do
     stream = Twitter::JSONStream.connect(options)
     account = config[account_name]
-    #Broach.settings = { 'account' => account_name, 'token' => account[:token], 'ssl'=> account[:ssl] }
-    #puts room_info
     stream.each_item do |item|
       msg = JSON.parse(item)
-      user = msg["user_id"] unless msg["user_id"].nil?
-      notify( "#{room_name}:", msg["body"].gsub('"','\\\\"') ) unless msg["body"].nil?
-      #puts msg["body"].gsub('"','\\\\"')
+      user = Broach.session.get("/users/#{msg["user_id"]}") unless msg["user_id"].nil?
+      notify( "#{user.first[1]['name']}:", msg["body"].gsub('"','\\\\"') ) unless msg["body"].nil?
     end
     
     stream.on_error do |message|
@@ -51,7 +49,7 @@ config.keys.each do |account_name|
       }
       
       #puts room.inspect
-      monitor_room(options,room_name,account_name,config)
+      monitor_room(options,rooms[room_name][:id],account_name,config)
     end
   end
 end
