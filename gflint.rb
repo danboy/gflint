@@ -8,7 +8,7 @@ require "broach"
 @last_message = 'gflint'
 
 def notify(header,msg,options = {})
-  `notify-send #{options[:img]} #{options[:delay]} '#{header}' '#{msg}'`
+  `notify-send #{options[:img]} #{options[:delay]} "#{header}" "#{msg}"`
 end
 
 def monitor_room(options,room_name,account_name, config)
@@ -21,9 +21,8 @@ def monitor_room(options,room_name,account_name, config)
     stream.each_item do |item|
       msg = JSON.parse(item)
       user = msg["user_id"] unless msg["user_id"].nil?
-      notify( "#{room_name}:", msg["body"].to_s ) unless msg["body"].nil?
-      #puts Broach::User.find(msg["user_id"])
-      puts msg.inspect 
+      notify( "#{room_name}:", msg["body"].gsub('"','\\\\"') ) unless msg["body"].nil?
+      #puts msg["body"].gsub('"','\\\\"')
     end
     
     stream.on_error do |message|
@@ -31,7 +30,7 @@ def monitor_room(options,room_name,account_name, config)
     end
    
     stream.on_max_reconnects do |timeout, retries|
-      puts "Tried #{retries} times to connect."
+      notify "TIMEOUT: ","Tried #{retries} times to connect."
       exit
     end
   end
