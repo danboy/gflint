@@ -4,6 +4,7 @@ require "uri"
 require 'twitter/json_stream'
 require 'json'
 require "broach"
+require 'pathname'
 
 @last_message = 'gflint'
 
@@ -13,14 +14,14 @@ end
 
 def monitor_room(options,room_name,account_name, config)
   Broach.settings = { 'account' => account_name, 'token' => config[account_name][:token],'use_ssl'=>config[account_name][:ssl]}
-
+  path = File.join(File.dirname(Pathname.new($0).realpath), "campfire-logo.png")
   EventMachine::run do
     stream = Twitter::JSONStream.connect(options)
     account = config[account_name]
     stream.each_item do |item|
       msg = JSON.parse(item)
       user = Broach.session.get("/users/#{msg["user_id"]}") unless msg["user_id"].nil?
-      notify( "#{user.first[1]['name']}:", msg["body"].gsub('"','\\\\"') ) unless msg["body"].nil?
+      notify( "#{user.first[1]['name']}:", msg["body"].gsub('"','\\\\"'), {:img => "-i #{path}"} ) unless msg["body"].nil?
     end
     
     stream.on_error do |message|
