@@ -6,22 +6,23 @@ require 'json'
 require "broach"
 require 'pathname'
 
-@last_message = 'gflint'
-
 def notify(header,msg,options = {})
   `notify-send #{options[:img]} #{options[:delay]} "#{header}" "#{msg}"`
 end
 
 def monitor_room(options,room_name,account_name, config)
   Broach.settings = { 'account' => account_name, 'token' => config[account_name][:token],'use_ssl'=>config[account_name][:ssl]}
-  path = File.join(File.dirname(Pathname.new($0).realpath), "campfire-logo.png")
+  pwd  = File.dirname(File.expand_path(__FILE__))
+  icon_path = "#{pwd}/campfire-logo.png"
+
   EventMachine::run do
     stream = Twitter::JSONStream.connect(options)
-    account = config[account_name]
+
     stream.each_item do |item|
       msg = JSON.parse(item)
       user = Broach.session.get("/users/#{msg["user_id"]}") unless msg["user_id"].nil?
-      notify( "#{user.first[1]['name']}:", msg["body"].gsub('"','\\\\"'), {:img => "-i #{path}"} ) unless msg["body"].nil?
+      notify( "#{user.first[1]['name']}:", msg["body"].gsub('"','\\\\"'), {:img => "-i #{icon_path}"} ) unless msg["body"].nil?
+      #puts icon_path
     end
     
     stream.on_error do |message|
@@ -32,6 +33,7 @@ def monitor_room(options,room_name,account_name, config)
       notify "TIMEOUT: ","Tried #{retries} times to connect."
       exit
     end
+    
   end
   
 end
