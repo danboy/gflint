@@ -14,10 +14,15 @@ def monitor_room(options,room_name,account_name, config)
   Broach.settings = { 'account' => account_name, 'token' => config[account_name][:token],'use_ssl'=>config[account_name][:ssl]}
   pwd  = File.dirname(File.expand_path(__FILE__))
   icon_path = "#{pwd}/campfire-logo.png"
-
+  # /room/#{id}/join.xml
+  begin
+    Broach.session.post("/room/#{room_name}/join.xml",{})
+  rescue
+    status = $!
+  end
   EventMachine::run do
     stream = Twitter::JSONStream.connect(options)
-
+    
     stream.each_item do |item|
       msg = JSON.parse(item)
       user = Broach.session.get("/users/#{msg["user_id"]}") unless msg["user_id"].nil?
